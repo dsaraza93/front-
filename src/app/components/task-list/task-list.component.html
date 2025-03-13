@@ -1,0 +1,196 @@
+<!-- Navbar profesional -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">Task Manager Pro</a>
+    <div class="ms-auto">
+      <!-- Enlace a LinkedIn -->
+      <a href="https://www.linkedin.com/in/dsaraza/" target="_blank" title="Daniel Saraza">
+        <img src="assets/images/linkedin.png" alt="LinkedIn" style="height: 30px;">
+      </a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- Contenedor principal -->
+<div class="container py-5">
+  <!-- Encabezado y botón para agregar tarea -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h2 class="mb-0">Mis Tareas</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <i class="bi bi-plus-circle"></i> Agregar Tarea
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros y búsqueda -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn"
+                [ngClass]="{'btn-outline-primary': filter !== 'all', 'btn-primary': filter === 'all'}"
+                (click)="filter='all'">
+          Todos
+        </button>
+        <button type="button" class="btn"
+                [ngClass]="{'btn-outline-primary': filter !== 'pending', 'btn-primary': filter === 'pending'}"
+                (click)="filter='pending'">
+          Pendientes
+        </button>
+        <button type="button" class="btn"
+                [ngClass]="{'btn-outline-primary': filter !== 'completed', 'btn-primary': filter === 'completed'}"
+                (click)="filter='completed'">
+          Completadas
+        </button>
+        <button type="button" class="btn"
+                [ngClass]="{'btn-outline-primary': filter !== 'today', 'btn-primary': filter === 'today'}"
+                (click)="filter='today'">
+          Hoy
+        </button>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <input type="text" class="form-control" placeholder="Buscar tarea..." [(ngModel)]="searchTerm" name="search">
+    </div>
+  </div>
+
+  <!-- Listado de tareas en tarjeta semi-transparente -->
+  <div class="card transparent-card shadow">
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let task of (tasks$ | async) | taskFilter:filter:searchTerm; trackBy: trackByTaskId"
+            class="list-group-item d-flex align-items-center">
+          <!-- Botón para marcar/desmarcar tarea -->
+          <button type="button" class="btn btn-link p-0 me-2"
+                  (click)="toggleTaskCompletion(task)"
+                  [ngbTooltip]="task.completed ? 'Desmarcar tarea' : 'Marcar tarea como completada'">
+            <i [ngClass]="task.completed ? 'bi bi-check-circle-fill text-success' : 'bi bi-check-circle text-muted'"
+               style="font-size: 1.5rem;"></i>
+          </button>
+          <!-- Botón para editar tarea -->
+          <button type="button" class="btn btn-link p-0 me-2"
+                  (click)="openEditModal(task)"
+                  ngbTooltip="Editar tarea">
+            <i class="bi bi-pencil" style="font-size: 1.5rem;"></i>
+          </button>
+          <!-- Contenido de la tarea -->
+          <div class="flex-fill">
+            <h5 [ngClass]="{'text-decoration-line-through text-muted': task.completed}" class="mb-1">
+              {{ task.title }}
+            </h5>
+            <p *ngIf="task.description" class="mb-0 small"
+               [ngClass]="{'text-decoration-line-through': task.completed}">
+              {{ task.description }}
+            </p>
+          </div>
+          <!-- Badge que indica estado -->
+          <span class="badge me-3" [ngClass]="{'bg-success': task.completed, 'bg-warning text-dark': !task.completed}">
+            {{ task.completed ? 'Completada' : 'Pendiente' }}
+          </span>
+          <!-- Botón para eliminar tarea -->
+          <button type="button" class="btn btn-link text-danger"
+                  (click)="deleteTask(task.id)"
+                  ngbTooltip="Eliminar tarea">
+            <i class="bi bi-trash" style="font-size: 1.5rem;"></i>
+          </button>
+        </li>
+        <!-- Mensaje cuando no se encuentran tareas -->
+        <li *ngIf="((tasks$ | async) | taskFilter:filter:searchTerm)?.length === 0"
+            class="list-group-item text-center text-muted">
+          No hay tareas que coincidan con los criterios.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Agregar Tarea -->
+<div *ngIf="showAddModal">
+  <div class="modal fade show" tabindex="-1" role="dialog" style="display: block;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Agregar Nueva Tarea</h5>
+          <button type="button" class="btn-close" aria-label="Close" (click)="closeAddModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form #addTaskForm="ngForm" (ngSubmit)="addTask(addTaskForm)" novalidate>
+            <div class="mb-3">
+              <label for="modalTitle" class="form-label">Título</label>
+              <input type="text" id="modalTitle" name="title" class="form-control" placeholder="Título de la tarea"
+                     [(ngModel)]="newTitle" required minlength="3" maxlength="50">
+              <div *ngIf="addTaskForm.submitted && addTaskForm.controls['title']?.errors" class="invalid-feedback d-block">
+                <div *ngIf="addTaskForm.controls['title']?.errors?.['required']">El título es obligatorio.</div>
+                <div *ngIf="addTaskForm.controls['title']?.errors?.['minlength']">El título debe tener al menos 3 caracteres.</div>
+                <div *ngIf="addTaskForm.controls['title']?.errors?.['maxlength']">El título no puede tener más de 50 caracteres.</div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="modalDescription" class="form-label">Descripción</label>
+              <textarea id="modalDescription" name="description" class="form-control" placeholder="Descripción de la tarea"
+                        [(ngModel)]="newDescription" required minlength="5" maxlength="200"></textarea>
+              <small class="text-muted d-block text-end">{{ newDescription.length || 0 }} / 200 caracteres</small>
+              <div *ngIf="addTaskForm.submitted && addTaskForm.controls['description']?.errors" class="invalid-feedback d-block">
+                <div *ngIf="addTaskForm.controls['description']?.errors?.['required']">La descripción es obligatoria.</div>
+                <div *ngIf="addTaskForm.controls['description']?.errors?.['minlength']">La descripción debe tener al menos 5 caracteres.</div>
+                <div *ngIf="addTaskForm.controls['description']?.errors?.['maxlength']">La descripción no puede tener más de 200 caracteres.</div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancelar</button>
+              <button type="submit" class="btn btn-success">Agregar Tarea</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</div>
+
+<!-- Modal para Editar Tarea -->
+<div *ngIf="showEditModal">
+  <div class="modal fade show" tabindex="-1" role="dialog" style="display: block;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">Editar Tarea</h5>
+          <button type="button" class="btn-close" aria-label="Close" (click)="closeEditModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form #editTaskForm="ngForm" (ngSubmit)="submitEditTask(editTaskForm)" novalidate>
+            <div class="mb-3">
+              <label for="editTitle" class="form-label">Título</label>
+              <input type="text" id="editTitle" name="title" class="form-control" placeholder="Título de la tarea"
+                     [(ngModel)]="editTitle" required minlength="3" maxlength="50">
+              <div *ngIf="editTaskForm.submitted && editTaskForm.controls['title']?.errors" class="invalid-feedback d-block">
+                <div *ngIf="editTaskForm.controls['title']?.errors?.['required']">El título es obligatorio.</div>
+                <div *ngIf="editTaskForm.controls['title']?.errors?.['minlength']">El título debe tener al menos 3 caracteres.</div>
+                <div *ngIf="editTaskForm.controls['title']?.errors?.['maxlength']">El título no puede tener más de 50 caracteres.</div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editDescription" class="form-label">Descripción</label>
+              <textarea id="editDescription" name="description" class="form-control" placeholder="Descripción de la tarea"
+                        [(ngModel)]="editDescription" required minlength="5" maxlength="200"></textarea>
+              <small class="text-muted d-block text-end">{{ editDescription.length || 0 }} / 200 caracteres</small>
+              <div *ngIf="editTaskForm.submitted && editTaskForm.controls['description']?.errors" class="invalid-feedback d-block">
+                <div *ngIf="editTaskForm.controls['description']?.errors?.['required']">La descripción es obligatoria.</div>
+                <div *ngIf="editTaskForm.controls['description']?.errors?.['minlength']">La descripción debe tener al menos 5 caracteres.</div>
+                <div *ngIf="editTaskForm.controls['description']?.errors?.['maxlength']">La descripción no puede tener más de 200 caracteres.</div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+              <button type="submit" class="btn btn-warning">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</div>

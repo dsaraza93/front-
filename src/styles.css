@@ -1,1 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
+/* src/styles.css */
+body {
+  background: url('assets/images/fondo.jpg') no-repeat center center fixed;
+  background-size: 100% auto;
+  margin: 0;
+  padding: 0;
+}
+
+
+

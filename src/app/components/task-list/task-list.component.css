@@ -1,0 +1,42 @@
+/* task-list.component.css */
+
+.task-list-container {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.task-list-container .task-form {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-list-container .task-form div {
+  margin-bottom: 0.5rem;
+}
+
+.task-list-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.task-list-container ul li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.task-list-container ul li .completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+.task-list-container ul li button {
+  margin-left: auto;
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
